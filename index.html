@@ -1,91 +1,8 @@
 
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>OMIKUJI // MASTER_CORE_v18_SWING_FIX</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <style>
-        @font-face { font-family: 'NIN'; src: url('nin.ttf'); } 
-        @font-face { font-family: 'DATA'; src: url('data.ttf'); }
-        body{font-family:'NIN';background:#000;color:#fff;padding:20px;text-transform:uppercase;user-select:none}
-        #chassis{width:1150px;background:#fff;border:4px solid #000;padding:20px;box-shadow:10px 10px 0 #000;color:#000;margin:0 auto}
-        .panel{border:2px solid #000;padding:10px;margin-bottom:15px;background:#fafafa}
-        .data-font{font-family:'DATA';font-size:10px;letter-spacing:1px}
-        button{font-family:'DATA';border:2px solid #000;background:#fff;cursor:pointer;padding:5px 10px;font-size:11px}
-        button:hover{background:#000;color:#fff}
-        input[type=range]{accent-color:#000;width:100%}
-        .step-grid { display: flex; gap: 4px; width: 860px; }
-        .step-col { width: 50px; flex-shrink: 0; display: flex; flex-direction: column; gap: 2px; }
-        .step { height: 20px; border: 2px solid #000; cursor: pointer; background: #fff; width: 50px; box-sizing: border-box; }
-        .v-box { height: 35px; border: 1px solid #ccc; position: relative; cursor: ns-resize; width: 50px; }
-        .v-bar { position: absolute; bottom: 0; width: 100%; background: #000; pointer-events: none; }
-        .piano-drawer { display:none; background:#eee; border-top:2px solid #000; margin-top:10px; padding:10px; }
-        .piano-key { height: 14px; border: 1px solid #bbb; cursor: pointer; font-size: 7px; display: flex; align-items: center; justify-content: center; background: #fff; width: 50px; margin-bottom:1px; }
-        .key-active { background: #000 !important; color: #fff !important; border: 1px solid #f44 !important; }
-        #monitor-panel{background:#000;color:#fff;padding:10px;height:60px;font-family:'DATA';font-size:9px;overflow-y:auto;border-top:4px solid #333}
-        .song-block { width:40px; height:40px; border:2px solid #000; display:flex; align-items:center; justify-content:center; cursor:pointer; font-family:'DATA'; font-size:12px; font-weight:bold; }
-        .fx-slot { border: 2px solid #000; margin-bottom: 10px; background: #fff; }
-    </style>
-</head>
-<body>
-<div id="chassis">
-    <div class="panel" style="display:flex;justify-content:space-between;align-items:center">
-        <div style="display:flex;gap:15px;align-items:center">
-            <button id="pB" onclick="play()">START/STOP</button>
-            <div class="data-font">BPM <input id="bpm" value="120" style="width:40px; border:2px solid #000; text-align:center"></div>
-            <div style="display:flex;gap:5px;border-left:2px solid #000;padding-left:10px">
-                <button onclick="copyP()">COPY_P</button><button onclick="pasteP()">PASTE_P</button>
-                <button onclick="exportSession()">EXPORT_SES</button>
-                <button onclick="$('loader').click()">IMPORT_SES</button>
-                <input type="file" id="loader" style="display:none" onchange="importSession(event)">
-            </div>
-        </div>
-        <div style="display:flex;gap:10px;align-items:center">
-            <button id="mB" onclick="m=1-m;mB.innerText=m?'MODE:SONG':'MODE:PAT';up()">MODE:PAT</button>
-            <div class="tabs">
-                <button id="tSeq" style="background:#000;color:#fff" onclick="tab('seq')">SEQ</button>
-                <button id="tFx" onclick="tab('fx')">FX</button>
-                <button onclick="addT()" style="background:#000;color:#fff">+ TRACK</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="page-seq">
-        <div class="panel"><div class="data-font">BLOCK_ARRANGER (SONG_SEQUENCE)</div><div id="song-slots" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"></div></div>
-        <div id="pattern-nav" style="display:flex;gap:5px;margin-bottom:10px"></div>
-        <div id="rack"></div>
-    </div>
-
-    <div id="page-fx" style="display:none">
-        <div class="panel">
-            <button onclick="$('pluginLoader').click()">+ INJECT MACHINE</button>
-            <input type="file" id="pluginLoader" style="display:none" onchange="injectPlugin(event)">
-            <div id="pluginUI" style="margin-top:10px"></div>
-        </div>
-    </div>
-
-    <hr>
-    <div class="panel" style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-        <div>
-            <div class="data-font">MASTER_VOLUME / SWING</div>
-            <input type="range" min="0" max="1.5" step="0.01" value="1" id="mVol" oninput="if(mG)mG.gain.value=this.value">
-            <div style="display:flex; gap:10px; margin-top:10px; align-items:center">
-                <input type="range" id="swAmt" min="0" max="1" step="0.01" value="0">
-                <button onclick="$('swLdr').click()">LOAD_SWING.JS</button>
-                <input type="file" id="swLdr" style="display:none" onchange="loadSwing(event)">
-            </div>
-        </div>
-        <div>
-            <div class="data-font">RECORDER</div>
-            <button id="armB" onclick="armRec()">ARM REC</button>
-            <button id="expB" style="display:none" onclick="exportWav()">EXPORT WAV</button>
-            <audio id="prev" controls style="display:none; height:25px"></audio>
-        </div>
-    </div>
-    <div id="monitor-panel"><div id="log-out">> OMIKUJI_V18_READY</div></div>
-</div>
-
+<!DOCTYPE html><html><head>    <meta charset="UTF-8">    <title>OMIKUJI // MASTER_CORE_v18_SWING_FIX</title>    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>    <style>        @font-face { font-family: 'NIN'; src: url('nin.ttf'); }         @font-face { font-family: 'DATA'; src: url('data.ttf'); }        body{font-family:'NIN';background:#000;color:#fff;padding:20px;text-transform:uppercase;user-select:none}        #chassis{width:1150px;background:#fff;border:4px solid #000;padding:20px;box-shadow:10px 10px 0 #000;color:#000;margin:0 auto}        .panel{border:2px solid #000;padding:10px;margin-bottom:15px;background:#fafafa}        .data-font{font-family:'DATA';font-size:10px;letter-spacing:1px}        button{font-family:'DATA';border:2px solid #000;background:#fff;cursor:pointer;padding:5px 10px;font-size:11px}        button:hover{background:#000;color:#fff}        input[type=range]{accent-color:#000;width:100%}        .step-grid { display: flex; gap: 4px; width: 860px; }        .step-col { width: 50px; flex-shrink: 0; display: flex; flex-direction: column; gap: 2px; }        .step { height: 20px; border: 2px solid #000; cursor: pointer; background: #fff; width: 50px; box-sizing: border-box; }        .v-box { height: 35px; border: 1px solid #ccc; position: relative; cursor: ns-resize; width: 50px; }        .v-bar { position: absolute; bottom: 0; width: 100%; background: #000; pointer-events: none; }        .piano-drawer { display:none; background:#eee; border-top:2px solid #000; margin-top:10px; padding:10px; }        .piano-key { height: 14px; border: 1px solid #bbb; cursor: pointer; font-size: 7px; display: flex; align-items: center; justify-content: center; background: #fff; width: 50px; margin-bottom:1px; }        .key-active { background: #000 !important; color: #fff !important; border: 1px solid #f44 !important; }        #monitor-panel{background:#000;color:#fff;padding:10px;height:60px;font-family:'DATA';font-size:9px;overflow-y:auto;border-top:4px solid #333}        .song-block { width:40px; height:40px; border:2px solid #000; display:flex; align-items:center; justify-content:center; cursor:pointer; font-family:'DATA'; font-size:12px; font-weight:bold; }        .fx-slot { border: 2px solid #000; margin-bottom: 10px; background: #fff; }    </style></head><body><div id="chassis">    <div class="panel" style="display:flex;justify-content:space-between;align-items:center">        <div style="display:flex;gap:15px;align-items:center">            <button id="pB" onclick="play()">START/STOP</button>            <div class="data-font">BPM <input id="bpm" value="120" style="width:40px; border:2px solid #000; text-align:center"></div>            <div style="display:flex;gap:5px;border-left:2px solid #000;padding-left:10px">                <button onclick="copyP()">COPY_P</button><button onclick="pasteP()">PASTE_P</button>                <button onclick="exportSession()">EXPORT_SES</button>                <button onclick="$('loader').click()">IMPORT_SES</button>                <input type="file" id="loader" style="display:none" onchange="importSession(event)">            </div>        </div>        <div style="display:flex;gap:10px;align-items:center">            <button id="mB" onclick="m=1-m;mB.innerText=m?'MODE:SONG':'MODE:PAT';up()">MODE:PAT</button>            <div class="tabs">                <button id="tSeq" style="background:#000;color:#fff" onclick="tab('seq')">SEQ</button>                <button id="tFx" onclick="tab('fx')">FX</button>                <button onclick="addT()" style="background:#000;color:#fff">+ TRACK</button>            </div>        </div>    </div>
+    <div id="page-seq">        <div class="panel"><div class="data-font">BLOCK_ARRANGER (SONG_SEQUENCE)</div><div id="song-slots" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"></div></div>        <div id="pattern-nav" style="display:flex;gap:5px;margin-bottom:10px"></div>        <div id="rack"></div>    </div>
+    <div id="page-fx" style="display:none">        <div class="panel">            <button onclick="$('pluginLoader').click()">+ INJECT MACHINE</button>            <input type="file" id="pluginLoader" style="display:none" onchange="injectPlugin(event)">            <div id="pluginUI" style="margin-top:10px"></div>        </div>    </div>
+    <hr>    <div class="panel" style="display:grid;grid-template-columns:1fr 1fr;gap:20px">        <div>            <div class="data-font">MASTER_VOLUME / SWING</div>            <input type="range" min="0" max="1.5" step="0.01" value="1" id="mVol" oninput="if(mG)mG.gain.value=this.value">            <div style="display:flex; gap:10px; margin-top:10px; align-items:center">                <input type="range" id="swAmt" min="0" max="1" step="0.01" value="0">                <button onclick="$('swLdr').click()">LOAD_SWING.JS</button>                <input type="file" id="swLdr" style="display:none" onchange="loadSwing(event)">            </div>        </div>        <div>            <div class="data-font">RECORDER</div>            <button id="armB" onclick="armRec()">ARM REC</button>            <button id="expB" style="display:none" onclick="exportWav()">EXPORT WAV</button>            <audio id="prev" controls style="display:none; height:25px"></audio>        </div>    </div>    <div id="monitor-panel"><div id="log-out">> OMIKUJI_V18_READY</div></div></div>
 <script>
 /** ENGINE CORE **/
 let ctx, b=0, m=0, cur=0, nxt=0, S=[0,0,1,1,2,2,3,3], tID, si=0, run=0, banks=Array.from({length:8},()=>[]), mG, dest, rec, chunks=[], armed=0, isRec=0, clip=null;
@@ -95,12 +12,19 @@ let swingEngine = { name:"STRAIGHT", getOffset: (s, a) => 0 };
 const NOTES = ["C", "B", "A#", "A", "G#", "G", "F#", "F", "E", "D#", "D", "C#", "C"];
 const $=id=>document.getElementById(id), log=msg=>{$('log-out').innerHTML+=`<div>${msg}</div>`;$('monitor-panel').scrollTop=9999};
 
-const initA=()=>{ if(ctx) return; ctx=new AudioContext(); mG=ctx.createGain(); mG.connect(ctx.destination); dest=ctx.createMediaStreamDestination(); mG.connect(dest); rec=new MediaRecorder(dest.stream); rec.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data)}; rec.onstop=()=>{let blob=new Blob(chunks,{type:'audio/wav'}); $('prev').src=URL.createObjectURL(blob); $('prev').style.display=$('expB').style.display='block';}; };
+const initA=async()=>{ 
+    if(!ctx){
+        ctx=new AudioContext(); mG=ctx.createGain(); mG.connect(ctx.destination); 
+        dest=ctx.createMediaStreamDestination(); mG.connect(dest); 
+        rec=new MediaRecorder(dest.stream); rec.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data)}; 
+        rec.onstop=()=>{let blob=new Blob(chunks,{type:'audio/wav'}); $('prev').src=URL.createObjectURL(blob); $('prev').style.display=$('expB').style.display='block';}; 
+    }
+    if(ctx.state === 'suspended') await ctx.resume();
+};
 
 /** SWING LOADER **/
 async function loadSwing(e) {
-    let f = e.target.files[0];
-    if (!f) return;
+    let f = e.target.files[0]; if (!f) return;
     try {
         const code = await f.text();
         const blob = new Blob([code], { type: 'text/javascript' });
@@ -112,11 +36,11 @@ async function loadSwing(e) {
 }
 
 const sch=()=>{
+    if(!run) return;
     let bpmVal=parseFloat($('bpm').value);
-    let secPerStep = 60 / bpmVal / 4; // Standard 16th note timing
+    let secPerStep = 60 / bpmVal / 4; 
     while(nxt < ctx.currentTime + 0.1){
-        if(m&&cur===0){ b=S[si]; si=(si+1)%S.length; } 
-        
+        if(m&&cur===0){ b=S[si]; si=(si+1)%S.length; }                 
         let off = swingEngine.getOffset(cur, parseFloat($('swAmt').value)) * secPerStep;
         let time = nxt + off;
 
@@ -126,8 +50,7 @@ const sch=()=>{
                 t.vV.disconnect(); t.vV.connect(mG);
                 let fx=window_fxR.find(f=>f.id===t.route);
                 if(fx&&fx.input){t.vV.disconnect(); t.vV.connect(fx.input); if(fx.output) fx.output.connect(mG);}
-                if(fx&&typeof fx.noteOn==='function')fx.noteOn(st.freq,time,st.v);
-                
+                if(fx&&typeof fx.noteOn==='function')fx.noteOn(st.freq,time,st.v);                                
                 if(t.buf){
                     // EVERY SEQUENCER TRACK SHOULD ALWAYS BE MONO TRIGGER SO SAMPLES NEVER OVERLAP
                     if(t.activeSources.length){
@@ -150,8 +73,8 @@ const sch=()=>{
     tID=setTimeout(sch,25);
 };
 
-const play=()=>{
-    initA(); run=!run; $('pB').style.background=run?"#000":"#fff"; $('pB').style.color=run?"#fff":"#000";
+const play=async()=>{
+    await initA(); run=!run; $('pB').style.background=run?"#000":"#fff"; $('pB').style.color=run?"#fff":"#000";
     if(run){ if(armed){chunks=[]; rec.start(); isRec=1;} cur=0; si=0; nxt=ctx.currentTime; sch(); }
     else { 
         // STOP KILLS ALL SOUND WITH FADE OUT, LIKE A PANIC SWITCH
@@ -189,6 +112,56 @@ const renderFX = () => {
     });
 };
 
+/** SESSION MANAGEMENT **/
+const exportSession=async()=>{
+    const zip=new JSZip();
+    const proj={bpm:$('bpm').value,S,mVol:$('mVol').value,fx:window_fxR.map(f=>({id:f.id,name:f.name,code:f._originalCode,state:f.getState?f.getState():{}})),banks:banks.map(bn=>bn.map(t=>({s:t.s,oct:t.oct,route:t.route,fileName:t.fileName,vol:t.vV.gain.value})))};
+    zip.file("project.json",JSON.stringify(proj));
+    banks[0].forEach(t=>{if(t.rawBlob)zip.file(`samples/${t.fileName}`,t.rawBlob);});
+    const b=await zip.generateAsync({type:"blob"});
+    const l=document.createElement('a'); l.href=URL.createObjectURL(b); l.download=`SESSION.omikuji`; l.click();
+};
+
+async function importSession(e) {
+    await initA();
+    let f=e.target.files[0]; if(!f) return;
+    log("IMPORTING SESSION...");
+    try {
+        const zip = await JSZip.loadAsync(f);
+        const proj = JSON.parse(await zip.file("project.json").async("string"));
+        
+        // Clear Current
+        banks = Array.from({length:8},()=>[]);
+        window_fxR = [];
+        
+        // Re-inject Machines
+        for(let fx of proj.fx){
+            let ins = await _inject(fx.code, fx.name, fx.id);
+            if(ins.setState) ins.setState(fx.state);
+        }
+        
+        // Rebuild Banks
+        for(let bi=0; bi<8; bi++){
+            for(let ti=0; ti<proj.banks[bi].length; ti++){
+                let pT = proj.banks[bi][ti];
+                let track = {s:pT.s, oct:pT.oct, buf:null, rawBlob:null, fileName:pT.fileName, vV:ctx.createGain(), route:pT.route, activeSources:[]};
+                track.vV.gain.value = pT.vol;
+                
+                let sFile = zip.file(`samples/${pT.fileName}`);
+                if(sFile){
+                    track.rawBlob = await sFile.async("blob");
+                    track.buf = await ctx.decodeAudioData(await track.rawBlob.arrayBuffer());
+                }
+                banks[bi].push(track);
+            }
+        }
+        
+        S=proj.S; $('bpm').value=proj.bpm; $('mVol').value=proj.mVol;
+        renderRack(); renderFX(); updateTD(); up();
+        log("SESSION LOADED.");
+    } catch(err) { log(`IMPORT ERROR: ${err.message}`); }
+}
+
 /** UI & SEQUENCER **/
 const drS=()=>{
     let h = S.map((p,i)=>`<div class="song-block" style="background:${(m&&run&&si-1==i)?'#000':'#fff'};color:${(m&&run&&si-1==i)?'#fff':'#000'};border-color:${(m&&run&&si-1==i)?'#f44':'#000'}" onclick="S[${i}]=(S[${i}]+1)%8;up()">P${p+1}</div>`).join('');
@@ -197,17 +170,19 @@ const drS=()=>{
 
 const up=()=>{
     $('pattern-nav').innerHTML=[0,1,2,3,4,5,6,7].map(i=>`<button onclick="b=${i};up()" style="flex:1;background:${b==i?'#000':'#fff'};color:${b==i?'#fff':'#000'}">${i+1}</button>`).join('');
-    banks[b].forEach((t,ti)=>{
-        for(let i=0;i<16;i++){
-            let st=t.s[i];
-            $(`s-${ti}-${i}`).style.background=st.on?(cur==i?"#f44":"#000"):(cur==i?"#555":(i%4==0?"#ddd":"#fff"));
-            $(`v-bar-${ti}-${i}`).style.height=(st.v*100)+"%"; $(`v-bar-${ti}-${i}`).style.opacity=st.on?1:0.2;
-            document.querySelectorAll(`.pk-${ti}-${i}`).forEach(k=>{
-                if(st.on && Math.abs(parseFloat(k.dataset.freq)-st.freq)<0.5) k.classList.add('key-active');
-                else k.classList.remove('key-active');
-            });
-        }
-    });
+    if(banks[b]){
+        banks[b].forEach((t,ti)=>{
+            for(let i=0;i<16;i++){
+                let st=t.s[i];
+                let el=$(`s-${ti}-${i}`);
+                if(el){
+                    el.style.background=st.on?(cur==i?"#f44":"#000"):(cur==i?"#555":(i%4==0?"#ddd":"#fff"));
+                    $(`v-bar-${ti}-${i}`).style.height=(st.v*100)+"%"; 
+                    $(`v-bar-${ti}-${i}`).style.opacity=st.on?1:0.2;
+                }
+            }
+        });
+    }
     drS();
 };
 
@@ -222,8 +197,7 @@ const renderPiano=(ti)=>{
             k.onclick=()=>{banks[b][ti].s[j].freq=f; banks[b][ti].s[j].on=1; up();}; col.appendChild(k);
         });
         g.appendChild(col);
-    }
-};
+    }};
 
 const renderRack=()=>{
     let r=$('rack'); r.innerHTML='';
@@ -243,29 +217,14 @@ const renderRack=()=>{
 const addT=()=>{ initA(); banks.forEach(bn=>bn.push({s:Array.from({length:16},()=>({on:0,v:0.8,freq:65.41})),oct:2,buf:null,rawBlob:null,fileName:"NO_SAMPLE",vV:ctx.createGain(),route:"MASTER",activeSources:[]})); renderRack(); };
 const tab=t=>{ $('page-seq').style.display=t=='seq'?'block':'none'; $('page-fx').style.display=t=='fx'?'block':'none'; $('tSeq').style.background=t=='seq'?'#000':'#fff'; $('tSeq').style.color=t=='seq'?'#fff':'#000'; $('tFx').style.background=t=='fx'?'#000':'#fff'; $('tFx').style.color=t=='fx'?'#fff':'#000'; };
 const updateTD=()=>{ document.querySelectorAll('.route-select').forEach((sel,i)=>{ let v=banks[0][i].route; sel.innerHTML='<option value="MASTER">MASTER</option>'; window_fxR.forEach(f=>sel.innerHTML+=`<option value="${f.id}">${f.id}</option>`); sel.value=v; }); };
-
-async function _inject(code, name, id=null) { 
-    const blob = new Blob([code], { type: 'text/javascript' }); 
-    const mod = await import(URL.createObjectURL(blob) + '#' + Date.now()); 
-    const Cls = mod.default || Object.values(mod)[0]; 
-    const ins = new Cls(ctx); 
-    ins.id = id || "FX_" + Math.random().toString(36).substr(2, 4).toUpperCase(); 
-    ins.name = name; 
-    ins._originalCode = code; 
-    if (ins.output) ins.output.connect(mG); 
-    window_fxR.push(ins); 
-    renderFX(); return ins; 
-}
+async function _inject(code, name, id=null) {     const blob = new Blob([code], { type: 'text/javascript' });     const mod = await import(URL.createObjectURL(blob) + '#' + Date.now());     const Cls = mod.default || Object.values(mod)[0];     const ins = new Cls(ctx);     ins.id = id || "FX_" + Math.random().toString(36).substr(2, 4).toUpperCase();     ins.name = name;     ins._originalCode = code;     if (ins.output) ins.output.connect(mG);     window_fxR.push(ins);     renderFX(); return ins; }
 async function injectPlugin(e) { let f=e.target.files[0]; if(!f)return; let c=await f.text(); await _inject(c, f.name); updateTD(); }
 const ld=async(i,e)=>{ let f=e.target.files[0]; if(!f)return; let d=await ctx.decodeAudioData(await f.arrayBuffer()); banks.forEach(bn=>{bn[i].buf=d; bn[i].fileName=f.name.toUpperCase(); bn[i].rawBlob=f;}); renderRack(); };
 const armRec=()=>{ initA(); armed=1; chunks=[]; $('armB').innerText="ARMED"; $('armB').style.background="#f44"; $('armB').style.color="#fff"; };
-const exportSession=async()=>{ const zip=new JSZip(); const proj={bpm:$('bpm').value,S,mVol:$('mVol').value,fx:window_fxR.map(f=>({id:f.id,name:f.name,code:f._originalCode,state:f.getState?f.getState():{}})),banks:banks.map(bn=>bn.map(t=>({s:t.s,oct:t.oct,route:t.route,fileName:t.fileName,vol:t.vV.gain.value})))}; zip.file("project.json",JSON.stringify(proj)); banks[0].forEach(t=>{if(t.rawBlob)zip.file(`samples/${t.fileName}`,t.rawBlob);}); const b=await zip.generateAsync({type:"blob"}); const l=document.createElement('a'); l.href=URL.createObjectURL(b); l.download=`SESSION.omikuji`; l.click(); };
 const exportWav=()=>{let a=document.createElement('a'); a.href=$('prev').src; a.download=`REC.wav`; a.click()};
 const toggleP=i=>{ let d=$(`piano-${i}`); d.style.display=d.style.display=='block'?'none':'block'; };
 const copyP=()=>{ clip = JSON.parse(JSON.stringify(banks[b].map(t=>t.s))); log(`COPIED PATTERN ${b+1}`); };
 const pasteP=()=>{ if(!clip)return; banks[b].forEach((t,i)=>{ t.s = JSON.parse(JSON.stringify(clip[i])); }); up(); log(`PASTED TO PATTERN ${b+1}`); };
 
 addT();
-</script>
-</body>
-</html>
+</script></body></html>
