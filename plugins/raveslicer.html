@@ -1,0 +1,127 @@
+<?php
+// 1. FORCE ERROR REPORTING [cite: 2026-01-20]
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// 2. SCAN CURRENT DIRECTORY
+$dir = "./"; 
+$files = array_filter(scandir($dir), function($item) {
+    // Filter for .wav files and exclude the script itself
+    return !is_dir($item) && 
+           pathinfo($item, PATHINFO_EXTENSION) == 'wav' && 
+           $item !== basename(__FILE__);
+});
+
+// 3. SORT NATURALLY (STAB_1, STAB_2, STAB_10)
+natsort($files);
+?>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>OMIKUJI // INTERNAL_STAB_INDEX</title>
+    <style>
+        @font-face { font-family: 'DATA'; src: url('data.ttf'); }
+        body { 
+            font-family: 'DATA', sans-serif; 
+            background: #000; 
+            color: #fff; 
+            padding: 30px; 
+            text-transform: uppercase; 
+        }
+        .container { 
+            max-width: 950px; 
+            margin: 0 auto; 
+            border: 4px solid #fff; 
+            padding: 20px; 
+            background: #050505;
+        }
+        .header {
+            border-bottom: 4px solid #fff;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+        h1 { margin: 0; font-size: 28px; letter-spacing: 2px; }
+        .count { color: #f44; font-size: 14px; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th { 
+            text-align: left; 
+            border-bottom: 2px solid #fff; 
+            padding: 12px; 
+            color: #888; 
+            font-size: 10px;
+        }
+        td { 
+            padding: 12px; 
+            border-bottom: 1px solid #222; 
+            font-size: 11px;
+            vertical-align: middle;
+        }
+        tr:hover { background: #111; }
+        
+        audio { 
+            height: 28px; 
+            width: 200px; 
+            filter: invert(1) hue-rotate(180deg) brightness(1.5); 
+        }
+        
+        .stab-name { color: #fff; font-weight: bold; }
+        .stats { color: #0f0; opacity: 0.7; }
+        .path-indicator { color: #444; font-size: 9px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>STAB_LIBRARY // INTERNAL</h1>
+        <div class="count">TOTAL_SAMPLES: <?php echo count($files); ?></div>
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>FILE_ID</th>
+                <th>SIZE</th>
+                <th>TIMESTAMP</th>
+                <th>AUDIO_PREVIEW</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php if(empty($files)): ?>
+                <tr>
+                    <td colspan="4" style="text-align:center; padding: 50px; color: #f44;">
+                        NO .WAV FILES DETECTED IN THIS FOLDER
+                    </td>
+                </tr>
+            <?php endif; ?>
+
+            <?php foreach ($files as $file): 
+                $size = round(filesize($file) / 1024, 2) . " KB";
+                $date = date("Y-m-d H:i", filemtime($file));
+            ?>
+            <tr>
+                <td class="stab-name"><?php echo htmlspecialchars($file); ?></td>
+                <td class="stats"><?php echo $size; ?></td>
+                <td><?php echo $date; ?></td>
+                <td>
+                    <audio controls preload="none">
+                        <source src="<?php echo htmlspecialchars($file); ?>" type="audio/wav">
+                    </audio>
+                </td>
+            </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+    
+    <div class="path-indicator">
+        ROOT_SCAN_PATH: <?php echo htmlspecialchars(realpath($dir)); ?>
+    </div>
+</div>
+
+</body>
+</html>

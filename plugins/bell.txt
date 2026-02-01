@@ -1,0 +1,143 @@
+/**
+ * OMIKUJI // BELL-01_CORE
+ * POLYPHONIC-CAPABLE BELL SYNTH WITH SPATIAL FX
+ * TEMPLATE: INSTRUMENT_CORE COMPLIANT [cite: 2026-01-25]
+ */
+
+export default class BellSynth {
+    constructor(ctx) {
+        this.ctx = ctx;
+        this.id = ""; 
+        this.name = "BELL-01_CORE";
+        
+        this.input = ctx.createGain(); // For consistency, though instruments generate sound
+        this.output = ctx.createGain();
+
+        this.params = {
+            waveform: 'sine',
+            decay: 0.8,
+            shape: 2000,   // Filter Cutoff
+            lfoRate: 2.0,
+            echoTime: 0.3,
+            echoMix: 0.3,
+            reverbMix: 0.2
+        };
+
+        // FX Chain
+        this.filter = ctx.createBiquadFilter();
+        this.filter.type = "lowpass";
+        
+        this.delay = ctx.createDelay();
+        this.delayFeedback = ctx.createGain();
+        this.delayMix = ctx.createGain();
+        
+        this.lfo = ctx.createOscillator();
+        this.lfoGain = ctx.createGain();
+        this.lfo.type = "sine";
+
+        this.setupRouting();
+        this.updateNodes();
+        this.lfo.start();
+    }
+
+    setupRouting() {
+        // LFO Modulates Filter Cutoff
+        this.lfo.connect(this.lfoGain);
+        this.lfoGain.connect(this.filter.frequency);
+
+        // Main Chain
+        this.filter.connect(this.output);
+
+        // Echo Path
+        this.filter.connect(this.delay);
+        this.delay.connect(this.delayFeedback);
+        this.delayFeedback.connect(this.delay);
+        this.delay.connect(this.delayMix);
+        this.delayMix.connect(this.output);
+    }
+
+    updateNodes() {
+        const now = this.ctx.currentTime;
+        this.filter.frequency.setTargetAtTime(this.params.shape, now, 0.05);
+        this.lfo.frequency.setTargetAtTime(this.params.lfoRate, now, 0.05);
+        this.lfoGain.gain.setTargetAtTime(this.params.shape * 0.5, now, 0.05);
+        
+        this.delay.delayTime.setTargetAtTime(this.params.echoTime, now, 0.05);
+        this.delayFeedback.gain.setTargetAtTime(0.4, now, 0.05);
+        this.delayMix.gain.setTargetAtTime(this.params.echoMix, now, 0.05);
+    }
+
+    // Host calls this on sequencer trigger
+    noteOn(freq, time, vel) {
+        const osc = this.ctx.createOscillator();
+        const env = this.ctx.createGain();
+        
+        osc.type = this.params.waveform;
+        osc.frequency.setValueAtTime(freq, time);
+        
+        // Bell Envelope (Fast attack, long decay)
+        env.gain.setValueAtTime(0, time);
+        env.gain.linearRampToValueAtTime(vel, time + 0.005);
+        env.gain.exponentialRampToValueAtTime(0.001, time + this.params.decay);
+        
+        osc.connect(env);
+        env.connect(this.filter);
+        
+        osc.start(time);
+        osc.stop(time + this.params.decay);
+    }
+
+    getState() { return this.params; }
+    setState(s) { 
+        this.params = Object.assign(this.params, s); 
+        this.updateNodes();
+        if(this.ui) this.renderUI();
+    }
+
+    renderUI(container, idx) {
+        if(container) this.ui = container;
+        this.ui.innerHTML = `
+            <div class="panel" style="background:#000;color:#fff;margin:0;display:flex;justify-content:space-between;padding:4px">
+                <span class="data-font">${this.id} // ${this.name}</span>
+                <span class="data-font" style="cursor:pointer;color:#f44" onclick="removeFX(${idx})">DEL</span>
+            </div>
+            <div class="data-font" style="padding:15px; background:#fff; border:2px solid #000">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px">
+                    <select onchange="let p=this.closest('.fx-slot').plugin; p.params.waveform=this.value;">
+                        <option value="sine" ${this.params.waveform=='sine'?'selected':''}>SINE</option>
+                        <option value="triangle" ${this.params.waveform=='triangle'?'selected':''}>TRIANGLE</option>
+                        <option value="sawtooth" ${this.params.waveform=='sawtooth'?'selected':''}>SAWTOOTH</option>
+                        <option value="square" ${this.params.waveform=='square'?'selected':''}>SQUARE</option>
+                    </select>
+                    <div style="font-size:8px; align-self:center">WAVEFORM</div>
+                </div>
+                <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; text-align:center;">
+                    <div>
+                        <input type="range" min="0.1" max="2" step="0.01" value="${this.params.decay}" 
+                            oninput="let p=this.closest('.fx-slot').plugin; p.params.decay=parseFloat(this.value);" 
+                            style="appearance: slider-vertical; height:60px; width:15px; accent-color:#000">
+                        <div style="margin-top:5px; font-size:7px">DECAY</div>
+                    </div>
+                    <div>
+                        <input type="range" min="100" max="8000" step="1" value="${this.params.shape}" 
+                            oninput="let p=this.closest('.fx-slot').plugin; p.params.shape=parseFloat(this.value); p.updateNodes()" 
+                            style="appearance: slider-vertical; height:60px; width:15px; accent-color:#000">
+                        <div style="margin-top:5px; font-size:7px">SHAPE</div>
+                    </div>
+                    <div>
+                        <input type="range" min="0.1" max="10" step="0.1" value="${this.params.lfoRate}" 
+                            oninput="let p=this.closest('.fx-slot').plugin; p.params.lfoRate=parseFloat(this.value); p.updateNodes()" 
+                            style="appearance: slider-vertical; height:60px; width:15px; accent-color:#000">
+                        <div style="margin-top:5px; font-size:7px">LFO</div>
+                    </div>
+                    <div>
+                        <input type="range" min="0" max="0.8" step="0.01" value="${this.params.echoMix}" 
+                            oninput="let p=this.closest('.fx-slot').plugin; p.params.echoMix=parseFloat(this.value); p.updateNodes()" 
+                            style="appearance: slider-vertical; height:60px; width:15px; accent-color:#000">
+                        <div style="margin-top:5px; font-size:7px">ECHO</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+}

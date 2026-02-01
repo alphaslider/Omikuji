@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GK_ULTRA // STAB_CHOPPER</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        @font-face { font-family: 'data'; src: url('data.ttf'); }
+        body { background: #111; color: #0f0; font-family: 'data', monospace; }
+        
+        .plugin-container {
+            border: 2px solid #333;
+            padding: 20px;
+            width: 450px;
+            margin: 20px auto;
+        }
+
+        /* Consistent Button Styling per guidelines */
+        button {
+            font-family: 'data', sans-serif;
+            font-size: 12px;
+            background: #222;
+            color: #0f0;
+            border: 1px solid #0f0;
+            padding: 5px 10px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        button:hover { background: #0f0; color: #000; }
+
+        .status { font-size: 10px; color: #888; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="plugin-container">
+    <h3>STAB_CHOPPER_V1</h3>
+    <input type="file" id="audioInput" accept="audio/*" style="display:none">
+    <button onclick="document.getElementById('audioInput').click()">LOAD WAVE</button>
+    <button id="exportBtn" disabled onclick="chopper.exportZip()">EXPORT ZIP (100)</button>
+    
+    <div class="status" id="statusText">READY // STANDBY</div>
+</div>
+
+<script>
+class StabChopper {
+    constructor() {
+        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        this.mainBuffer = null;
+        this.threshold = 0.05;
+        this.minSilence = 0.1;
+        this.detectedCuts = [];
+
+        // Total Serialization State
+        this.getState = () => ({
+            threshold: this.threshold,
+            minSilence: this.minSilence
+        });
+
+        this.setState = (state) => {
+            this.threshold = state.threshold || 0.05;
+            this.minSilence = state.minSilence || 0.1;
+        };
+    }
+
+    async loadFile(file) {
+        const arrayBuffer = await file.arrayBuffer();
+        this.mainBuffer = await this.audioCtx.decodeAudioData(arrayBuffer);
+        this.detect();
+    }
+
+    detect() {
+        const data = this.mainBuffer.getChannelData(0);
+        const sr = this.mainBuffer.sampleRate;
+        this.detectedCuts = [];
+        
+        let isRecording = false;
+        let startPoint = 0;
+        let silenceSamples = 0;
+        const silenceThreshold = this.minSilence * sr;
+
+        for (let i = 0; i < data.length; i++) {
+            const amp = Math.abs(data[i]);
+            if (!isRecording && amp > this.threshold) {
+                isRecording = true;
+                startPoint = i;
+            } else if (isRecording && amp < this.threshold) {
+                silenceSamples++;
+                if (silenceSamples > silenceThreshold) {
+                    this.detectedCuts.push({s: startPoint, e: i});
+                    isRecording = false;
+                    silenceSamples = 0;
+                }
+            } else {
+                silenceSamples = 0;
+            }
+        }
+        
+        document.getElementById('statusText').innerText = `DETECTED: ${this.detectedCuts.length} STABS`;
+        document.getElementById('exportBtn').disabled = this.detectedCuts.length === 0;
+    }
+
+    async exportZip() {
+        const zip = new JSZip();
+        const limit = Math.min(this.detectedCuts.length, 100);
+        
+        document.getElementById('statusText').innerText = "ZIPPING...";
+
+        for (let i = 0; i < limit; i++) {
+            const cut = this.detectedCuts[i];
+            const wavBlob = this.bufferToWav(this.mainBuffer, cut.s, cut.e);
+            zip.file(`rave_stab_${String(i+1).padStart(3, '0')}.wav`, wavBlob);
+        }
+
+        const content = await zip.generateAsync({type: "blob"});
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(content);
+        link.download = "GK_ULTRA_STABS.zip";
+        link.click();
+        document.getElementById('statusText').innerText = "EXPORT COMPLETE";
+    }
+
+    bufferToWav(buffer, start, end) {
+        const length = (end - start) * buffer.numberOfChannels * 2 + 44;
+        const out = new ArrayBuffer(length);
+        const view = new DataView(out);
+        const channels = [];
+        for(let i=0; i<buffer.numberOfChannels; i++) channels.push(buffer.getChannelData(i).slice(start, end));
+
+        // WAV Header
+        writeString(view, 0, 'RIFF');
+        view.setUint32(4, 36 + (end - start) * 2 * buffer.numberOfChannels, true);
+        writeString(view, 8, 'WAVE');
+        writeString(view, 12, 'fmt ');
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true);
+        view.setUint16(22, buffer.numberOfChannels, true);
+        view.setUint32(24, buffer.sampleRate, true);
+        view.setUint32(28, buffer.sampleRate * 2 * buffer.numberOfChannels, true);
+        view.setUint16(32, buffer.numberOfChannels * 2, true);
+        view.setUint16(34, 16, true);
+        writeString(view, 36, 'data');
+        view.setUint32(40, (end - start) * 2 * buffer.numberOfChannels, true);
+
+        // PCM Data
+        let offset = 44;
+        for (let i = 0; i < channels[0].length; i++) {
+            for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+                let s = Math.max(-1, Math.min(1, channels[ch][i]));
+                view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+                offset += 2;
+            }
+        }
+        return new Blob([view], {type: 'audio/wav'});
+    }
+}
+
+function writeString(view, offset, string) {
+    for (let i = 0; i < string.length; i++) view.setUint8(offset + i, string.charCodeAt(i));
+}
+
+const chopper = new StabChopper();
+
+document.getElementById('audioInput').onchange = (e) => {
+    if (e.target.files[0]) chopper.loadFile(e.target.files[0]);
+};
+
+/* SEQUENCER ENGINE (MONO TRIGGER ENFORCED)
+   "Every sequencer track should always be MONO trigger so samples never overlap" 
+*/
+let activeSource = null; 
+function triggerSample(buffer) {
+    if (activeSource) { activeSource.stop(); } // MONO KILL
+    activeSource = chopper.audioCtx.createBufferSource();
+    activeSource.buffer = buffer;
+    activeSource.connect(chopper.audioCtx.destination);
+    activeSource.start();
+}
+</script>
+</body>
+</html>
